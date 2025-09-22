@@ -107,7 +107,7 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pos
 
     const torso = new THREE.Group();
     torso.name = JOINT_NAMES.TORSO;
-    torso.position.y = 0.5;
+    torso.position.y = 0.6; // Shorter torso
     hips.add(torso);
     jointObjects.current.set(JOINT_NAMES.TORSO, torso);
     interactiveJoints.current.push(torso);
@@ -115,14 +115,14 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pos
 
     const neck = new THREE.Group();
     neck.name = JOINT_NAMES.NECK;
-    neck.position.y = 0.5;
+    neck.position.y = 0.1; // Shorter neck
     torso.add(neck);
     jointObjects.current.set(JOINT_NAMES.NECK, neck);
     interactiveJoints.current.push(neck);
     neck.add(createJoint('neck_sphere', neckMat, 0.08));
 
     const head = new THREE.Group();
-    head.position.y = 0.2;
+    head.position.y = 0.15; // Adjusted head position
     neck.add(head);
     jointObjects.current.set(JOINT_NAMES.HEAD, head);
     head.add(createJoint(JOINT_NAMES.HEAD, headMat, 0.2));
@@ -148,14 +148,14 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pos
 
         const elbow = new THREE.Group();
         elbow.name = elbowName;
-        elbow.position.y = -0.5;
+        elbow.position.y = -0.6; // Longer upper arm
         shoulder.add(elbow);
         jointObjects.current.set(elbowName, elbow);
         interactiveJoints.current.push(elbow);
         elbow.add(createJoint('elbow_sphere', elbowMat));
 
         const hand = new THREE.Group();
-        hand.position.y = -0.4;
+        hand.position.y = -0.5; // Longer forearm
         elbow.add(hand);
         jointObjects.current.set(handName, hand);
         hand.add(createJoint('hand_sphere', handMat, 0.08));
@@ -165,7 +165,7 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pos
 
     // Legs
     const createLeg = (side: 'left' | 'right') => {
-        const sideX = side === 'left' ? 0.15 : -0.15;
+        const sideX = side === 'left' ? 0.2 : -0.2; // Slightly wider hips
         const hipName = side === 'left' ? JOINT_NAMES.LEFT_HIP : JOINT_NAMES.RIGHT_HIP;
         const kneeName = side === 'left' ? JOINT_NAMES.LEFT_KNEE : JOINT_NAMES.RIGHT_KNEE;
         const footName = side === 'left' ? JOINT_NAMES.LEFT_FOOT : JOINT_NAMES.RIGHT_FOOT;
@@ -184,14 +184,14 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pos
 
         const knee = new THREE.Group();
         knee.name = kneeName;
-        knee.position.y = -0.6;
+        knee.position.y = -0.7; // Longer thigh
         hip.add(knee);
         jointObjects.current.set(kneeName, knee);
         interactiveJoints.current.push(knee);
         knee.add(createJoint('knee_sphere', kneeMat));
 
         const foot = new THREE.Group();
-        foot.position.y = -0.5;
+        foot.position.y = -0.6; // Longer shin
         knee.add(foot);
         jointObjects.current.set(footName, foot);
         foot.add(createJoint('foot_sphere', footMat, 0.08));
