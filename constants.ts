@@ -1,16 +1,15 @@
-
 import type { PoseData } from './types';
 
 export const INITIAL_POSE_DATA: PoseData = {
   torso: { x: 0, y: 0, z: 0 },
   neck: { x: 0, y: 0, z: 0 },
-  leftShoulder: { x: 0, y: 0, z: -10 },
-  leftElbow: { x: 0, y: 0, z: -25 },
-  rightShoulder: { x: 0, y: 0, z: 10 },
-  rightElbow: { x: 0, y: 0, z: 25 },
-  leftHip: { x: 0, y: 0, z: 170 },
+  leftShoulder: { x: 0, y: 0, z: 0 },
+  leftElbow: { x: 0, y: 0, z: 0 },
+  rightShoulder: { x: 0, y: 0, z: 0 },
+  rightElbow: { x: 0, y: 0, z: 0 },
+  leftHip: { x: 0, y: 0, z: 0 },
   leftKnee: { x: 0, y: 0, z: 0 },
-  rightHip: { x: 0, y: 0, z: -170 },
+  rightHip: { x: 0, y: 0, z: 0 },
   rightKnee: { x: 0, y: 0, z: 0 },
 };
 

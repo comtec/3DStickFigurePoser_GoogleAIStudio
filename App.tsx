@@ -13,6 +13,11 @@ const App: React.FC = () => {
     setPoseData(newPose);
   }, []);
 
+  const handlePoseUpload = useCallback((newPose: PoseData) => {
+    // A more robust app might validate the newPose structure here
+    setPoseData(newPose);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col md:flex-row font-sans">
       <header className="absolute top-0 left-0 w-full p-4 z-10 text-center md:text-left">
@@ -23,11 +28,11 @@ const App: React.FC = () => {
       </header>
 
       <div className="flex-grow w-full md:w-2/3 h-[50vh] md:h-screen">
-        <StickFigureCanvas onPoseUpdate={handlePoseUpdate} initialPose={INITIAL_POSE_DATA} />
+        <StickFigureCanvas onPoseUpdate={handlePoseUpdate} pose={poseData} />
       </div>
       
       <div className="w-full md:w-1/3 h-[50vh] md:h-screen bg-gray-800 shadow-lg p-4 md:pt-24 overflow-y-auto">
-        <Controls poseData={poseData} />
+        <Controls poseData={poseData} onPoseUpload={handlePoseUpload} />
       </div>
     </div>
   );

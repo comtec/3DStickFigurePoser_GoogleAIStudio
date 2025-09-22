@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -7,10 +6,10 @@ import { JOINT_NAMES } from '../constants';
 
 interface StickFigureCanvasProps {
   onPoseUpdate: (pose: PoseData) => void;
-  initialPose: PoseData;
+  pose: PoseData;
 }
 
-const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, initialPose }) => {
+const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, pose }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -21,11 +20,27 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, ini
   
   const selectedJoint = useRef<THREE.Object3D | null>(null);
   const interactiveJoints = useRef<THREE.Object3D[]>([]);
-  const poseDataRef = useRef<PoseData>(initialPose);
   const limbs = useRef<THREE.Line[]>([]);
   const jointObjects = useRef<Map<string, THREE.Object3D>>(new Map());
 
+  // Fix stale closure issue by using a ref to hold the latest onPoseUpdate callback.
+  const onPoseUpdateRef = useRef(onPoseUpdate);
+  useEffect(() => {
+    onPoseUpdateRef.current = onPoseUpdate;
+  }, [onPoseUpdate]);
+
   const createStickFigure = useCallback(() => {
+    // Cleanup previous figure if any
+    const existingFigure = sceneRef.current.getObjectByName('stickFigure');
+    if (existingFigure) {
+        sceneRef.current.remove(existingFigure);
+    }
+    limbs.current.forEach(limb => sceneRef.current.remove(limb));
+    limbs.current = [];
+    interactiveJoints.current = [];
+    jointObjects.current.clear();
+
+
     const jointMaterial = new THREE.MeshStandardMaterial({ color: 0x00aaff, roughness: 0.5 });
     const limbMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3 });
     const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffaaff, roughness: 0.5 });
@@ -161,24 +176,14 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, ini
     createLimb(jointObjects.current.get(JOINT_NAMES.RIGHT_HIP)!, jointObjects.current.get(JOINT_NAMES.RIGHT_KNEE)!);
     createLimb(jointObjects.current.get(JOINT_NAMES.RIGHT_KNEE)!, jointObjects.current.get(JOINT_NAMES.RIGHT_FOOT)!);
 
-    // Set initial pose
-    for (const [name, rotation] of Object.entries(initialPose)) {
-        const joint = jointObjects.current.get(name);
-        if (joint) {
-            joint.rotation.set(
-                THREE.MathUtils.degToRad(rotation.x),
-                THREE.MathUtils.degToRad(rotation.y),
-                THREE.MathUtils.degToRad(rotation.z)
-            );
-        }
-    }
-
     return figure;
-  }, [initialPose]);
+  }, []);
   
   const updateLimbs = useCallback(() => {
+    if (limbs.current.length === 0) return;
     const worldPos = new THREE.Vector3();
     const updateLimb = (line: THREE.Line, start: THREE.Object3D, end: THREE.Object3D) => {
+        if (!line || !start || !end) return;
         const positions = line.geometry.attributes.position;
         start.getWorldPosition(worldPos);
         positions.setXYZ(0, worldPos.x, worldPos.y, worldPos.z);
@@ -220,20 +225,19 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, ini
             z: Math.round(THREE.MathUtils.radToDeg(joint.rotation.z)),
         };
     }
-    poseDataRef.current = newPoseData;
-    onPoseUpdate(newPoseData);
-  }, [onPoseUpdate]);
+    onPoseUpdateRef.current(newPoseData);
+  }, []);
 
   const onPointerDown = useCallback((event: PointerEvent) => {
     event.preventDefault();
-    if (!mountRef.current) return;
+    if (!mountRef.current || !cameraRef.current) return;
     
     const rect = mountRef.current.getBoundingClientRect();
     mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    raycaster.current.setFromCamera(mouse.current, cameraRef.current!);
-    const intersects = raycaster.current.intersectObjects(interactiveJoints.current.map(j => j.children[0]));
+    raycaster.current.setFromCamera(mouse.current, cameraRef.current);
+    const intersects = raycaster.current.intersectObjects(interactiveJoints.current.map(j => j.children[0]), true);
 
     if (intersects.length > 0) {
         selectedJoint.current = intersects[0].object.parent; // Select the group
@@ -262,7 +266,22 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, ini
       controlsRef.current.enabled = true;
     }
   }, []);
-
+  
+  // Effect to apply pose from props
+  useEffect(() => {
+    for (const [name, rotation] of Object.entries(pose)) {
+        const joint = jointObjects.current.get(name);
+        if (joint) {
+            joint.rotation.set(
+                THREE.MathUtils.degToRad(rotation.x),
+                THREE.MathUtils.degToRad(rotation.y),
+                THREE.MathUtils.degToRad(rotation.z)
+            );
+        }
+    }
+    // After applying a new pose, the limbs need to be redrawn.
+    updateLimbs();
+  }, [pose, updateLimbs]);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -339,11 +358,13 @@ const StickFigureCanvas: React.FC<StickFigureCanvasProps> = ({ onPoseUpdate, ini
       // Dispose Three.js objects
       sceneRef.current.traverse(object => {
           if (object instanceof THREE.Mesh) {
-              object.geometry.dispose();
-              if (Array.isArray(object.material)) {
-                  object.material.forEach(material => material.dispose());
-              } else {
-                  object.material.dispose();
+              if (object.geometry) object.geometry.dispose();
+              if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => material.dispose());
+                } else {
+                    object.material.dispose();
+                }
               }
           }
       });
