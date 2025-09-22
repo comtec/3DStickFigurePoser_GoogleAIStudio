@@ -1,0 +1,5 @@
+{
+  "name": "React 3D Stick Figure Poser",
+  "description": "An interactive 3D stick figure posing tool built with React, Three.js, and Tailwind CSS. Users can drag the joints of the figure to create unique poses and export the pose data as a JSON file.",
+  "requestFramePermissions": []
+}
