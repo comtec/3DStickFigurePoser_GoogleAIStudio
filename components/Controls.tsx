@@ -69,6 +69,14 @@ const Controls: React.FC<ControlsProps> = ({ poseData, onPoseUpload }) => {
     }
   };
 
+  const handleResetPose = () => {
+    const resetPose: PoseData = {};
+    Object.keys(poseData).forEach(key => {
+      resetPose[key] = { x: 0, y: 0, z: 0 };
+    });
+    onPoseUpload(resetPose);
+  };
+
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -85,7 +93,7 @@ const Controls: React.FC<ControlsProps> = ({ poseData, onPoseUpload }) => {
 
       {error && <p className="text-red-500 text-xs text-center -my-2">{error}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={handleUpdatePose}
           className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 shadow-md"
@@ -103,6 +111,12 @@ const Controls: React.FC<ControlsProps> = ({ poseData, onPoseUpload }) => {
           className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-75 shadow-md"
         >
           Download JSON
+        </button>
+        <button
+          onClick={handleResetPose}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75 shadow-md"
+        >
+          Reset Pose
         </button>
       </div>
       
